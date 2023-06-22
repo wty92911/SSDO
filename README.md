@@ -1,5 +1,11 @@
 # SSDO
 SSAO&amp;SSDO ComputerGraphics  Final Team Project
+## Intro
+## Instruction
+```sh
+git clone git@github.com:wty92911/SSDO.git
+git submodule update --init --recursive
+```
 ## Contributor
 
 wangtianyu-wty92911
