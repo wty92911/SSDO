@@ -33,3 +33,7 @@
 
 # Apple
 .DS_Store
+
+# Compile & Run
+build/*
+.vscode/*
