@@ -1,6 +1,5 @@
 # SSDO
 SSAO&amp;SSDO ComputerGraphics  Final Team Project
-## Intro
 ## Clone
 ```sh
 git clone git@github.com:wty92911/SSDO.git
@@ -23,4 +22,5 @@ chenzimu-zer0M1nd
 zhaoyinuo-SueJane
 
 ## Reference
-[1](https://www.kindem.xyz/post/54/)
+[算法简要](https://www.kindem.xyz/post/54/)
+[learn-opengl](https://learnopengl-cn.github.io/05%20Advanced%20Lighting/09%20SSAO/)

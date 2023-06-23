@@ -31,7 +31,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
+Camera camera(glm::vec3(5.0f, 5.0f, 0.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -91,7 +91,7 @@ int main()
     Shader shaderLightingPass((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/ssdo_lighting.fs").c_str());
 
     Model backpack((RES_DIR + "/models/Sponza-master/sponza.obj").c_str());
-
+    std::cout << backpack.textures_loaded.size() << std::endl;
     unsigned int gBuffer;
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -274,7 +274,7 @@ int main()
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // indireclight
+        //indireclight
         glBindFramebuffer(GL_FRAMEBUFFER, ssdoFBO2);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shaderindirectlight.use();
