@@ -201,7 +201,7 @@ int main()
     // lighting info
     // -------------
     glm::vec3 lightPos = glm::vec3(2.0, 4.0, -2.0);
-    glm::vec3 lightColor = glm::vec3(0.2, 0.2, 0.7);
+    glm::vec3 lightColor = glm::vec3(1, 1, 1);//glm::vec3(0.2, 0.2, 0.7);
 
     // shader configuration
     // --------------------
