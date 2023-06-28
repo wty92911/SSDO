@@ -1,0 +1,3 @@
+#model=models/car/911_scene.obj
+model=objects/car/911_scene.obj
+scale=1.0

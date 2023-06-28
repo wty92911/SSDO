@@ -22,8 +22,8 @@ void renderQuad();
 void renderCube();
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+int SCR_WIDTH = 800;
+int SCR_HEIGHT = 600;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -233,9 +233,18 @@ int main()
 
         // render
         // ------
+
+        float ratio;
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        SCR_WIDTH = width;
+        SCR_HEIGHT = height;
+        ratio = width / (float) height;
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glViewport(0, 0, width, height);
         // 1. geometry pass: render scene's geometry/color data into gbuffer
         // -----------------------------------------------------------------
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -458,7 +467,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+    // glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called
