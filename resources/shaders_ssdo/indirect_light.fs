@@ -127,5 +127,5 @@ void main()
 		}
     }
 	
-	FragColor = dir_light * direct_strength + indir_light * indirect_strength;
+	FragColor = dir_light * direct_strength + indir_light * indirect_strength / (radius * radius / 0.25);
 }
