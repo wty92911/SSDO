@@ -8,19 +8,22 @@ uniform sampler2D gAlbedo;
 uniform sampler2D texNoise;
 uniform sampler2D directLight;
 
+uniform float direct_strength;
+uniform float indirect_strength;
 
-uniform vec3 samples[64];
+uniform vec3 samples[256];
 
-const int kernelSize = 64;
-const float radius = 0.5f;
+uniform int samplecount;
+uniform float radius;
 
-const vec2 noiseScale = vec2(800.0f/4.0f, 600.0f/4.0f);
+const vec2 noiseScale = vec2(800.0f/1.0f, 600.0f/1.0f);
 const float PI=3.14159265;
-const float A_s=PI*radius*radius/kernelSize;
-const float bias=0.025;
+float A_s=PI*radius*radius/samplecount;
+const float bias=0.0;
 float roughness=0.0;
 float metallic=0.0;
 uniform mat4 projection;
+
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness*roughness;
@@ -80,14 +83,12 @@ void main()
 	
 	vec3 Albedo=texture(gAlbedo, TexCoords).rgb;
 	vec3 indir_light=vec3(0.0f);
-               vec3 F0 = vec3(0.04); 
-               F0 = mix(F0, Albedo, metallic);
-               vec3 V=normalize(-fragPos);
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, Albedo, metallic);
+    vec3 V=normalize(-fragPos);
 
-
-               vec3 dir_light=texture(directLight, TexCoords).rgb;
-    for(int i = 0; i < kernelSize; ++i)
-    {
+    vec3 dir_light=texture(directLight, TexCoords).rgb;
+    for(int i = 0; i < samplecount; ++i) {
         vec3 sample = TBN * samples[i];
         sample = fragPos + sample * radius; 
         
@@ -98,8 +99,7 @@ void main()
         
         vec3 sample2 = texture(gPosition, offset.xy).xyz; // Get depth value of kernel sample
     
-		if(sample2.z >=sample.z+bias)
-		{
+		if(sample2.z >=sample.z + bias) {
 			
 			vec3 L_pixel = texture(directLight, offset.xy).rgb;
 			vec3 normal_sender = texture(gNormal, offset.xy).rgb;
@@ -115,18 +115,17 @@ void main()
             vec3 numerator    = NDF * G * F; 
             float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
             vec3 specular = numerator / denominator;
-            vec3 kS =F;
+            vec3 kS = F;
             vec3 kD = vec3(1.0) - kS;
             kD *= 1.0 - metallic;
                                                
 			float cos_s = max(dot(-normalized_trans_dir,normal_sender), 0.0f);
 			float cos_r = max(dot(normalized_trans_dir,normal), 0.0f);
-			float d_2=len(trans_dir);
-                                                float fac=0.0f;
-                                               //kD*albedo/pi+specular is brdf value
-			indir_light +=( kD*Albedo/PI+specular) * L_pixel * A_s * cos_s * cos_r*min(20.0f,1.0f/d_2) ;
+			float d_2 = len(trans_dir);
+
+			indir_light += (kD*Albedo/PI+specular) * L_pixel * A_s * cos_s * cos_r*min(20.0f,1.0f/d_2) ;
 		}
     }
 	
-	FragColor=dir_light+indir_light;
+	FragColor = dir_light * direct_strength + indir_light * indirect_strength;
 }
