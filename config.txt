@@ -1,7 +1,3 @@
-#model=models/car/911_scene.obj
-//model=objects/sponza/sponza.obj
-//scale=0.01
-
 
 models=sponza,backpack,mc,mm,robo
 
