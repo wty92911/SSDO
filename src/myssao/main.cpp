@@ -57,12 +57,12 @@ class Buffers{
     unsigned int gBuffer;
     unsigned int gPosition, gNormal, gAlbedo;
     unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-    unsigned int rboDepth;
-    unsigned int ssdoFBO;
-    unsigned int ssdoColorBuffer;
-    unsigned int ssdoFBO2, ssdoBlurFBO;
-    unsigned int ssdoColorBuffer2, ssdoColorBufferBlur;
-    unsigned int noiseTexture;
+    unsigned int rbo_depth;
+    unsigned int ssdo_fbo;
+    unsigned int ssdo_color;
+    unsigned int ssdo_fbo2, ssdo_blur_fbo;
+    unsigned int ssdo_color2, ssdo_blur;
+    unsigned int noise;
 }buf;
 
 struct ModelInfo{
@@ -134,7 +134,7 @@ void remake_kernels(){
     }
 }
 
-void remake(int width, int height){
+void remake_buffers(int width, int height){
     
     glGenFramebuffers(1, &buf.gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, buf.gBuffer);
@@ -166,58 +166,58 @@ void remake(int width, int height){
     glDrawBuffers(3, buf.attachments);
 
     
-    glGenRenderbuffers(1, &buf.rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, buf.rboDepth);
+    glGenRenderbuffers(1, &buf.rbo_depth);
+    glBindRenderbuffer(GL_RENDERBUFFER, buf.rbo_depth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buf.rboDepth);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buf.rbo_depth);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    glGenFramebuffers(1, &buf.ssdoFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdoFBO);
+    glGenFramebuffers(1, &buf.ssdo_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_fbo);
     
     // SSDO color buffer
-    glGenTextures(1, &buf.ssdoColorBuffer);
-    glBindTexture(GL_TEXTURE_2D, buf.ssdoColorBuffer);
+    glGenTextures(1, &buf.ssdo_color);
+    glBindTexture(GL_TEXTURE_2D, buf.ssdo_color);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buf.ssdoColorBuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buf.ssdo_color, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "SSDO Framebuffer not complete!" << std::endl;
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     
-    glGenFramebuffers(1, &buf.ssdoFBO2);glGenFramebuffers(1, &buf.ssdoBlurFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdoFBO2);
+    glGenFramebuffers(1, &buf.ssdo_fbo2);glGenFramebuffers(1, &buf.ssdo_blur_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_fbo2);
     
-    glGenTextures(1, &buf.ssdoColorBuffer2);
-    glBindTexture(GL_TEXTURE_2D, buf.ssdoColorBuffer2);
+    glGenTextures(1, &buf.ssdo_color2);
+    glBindTexture(GL_TEXTURE_2D, buf.ssdo_color2);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buf.ssdoColorBuffer2, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buf.ssdo_color2, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "SSDO Framebuffer not complete!" << std::endl;
     // make some blur
-    glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdoBlurFBO);
-    glGenTextures(1, &buf.ssdoColorBufferBlur);
-    glBindTexture(GL_TEXTURE_2D, buf.ssdoColorBufferBlur);
+    glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_blur_fbo);
+    glGenTextures(1, &buf.ssdo_blur);
+    glBindTexture(GL_TEXTURE_2D, buf.ssdo_blur);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buf.ssdoColorBufferBlur, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buf.ssdo_blur, 0);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         std::cout << "SSAO Blur Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glGenTextures(1, &buf.noiseTexture);
-    glBindTexture(GL_TEXTURE_2D, buf.noiseTexture);
+    glGenTextures(1, &buf.noise);
+    glBindTexture(GL_TEXTURE_2D, buf.noise);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssdoNoise[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -275,15 +275,15 @@ public:
         ImGui::SliderFloat("G", &config.light_g, 0.0F, 1.0F, "%.02f", 1.0F);
         ImGui::SliderFloat("B", &config.light_b, 0.0F, 1.0F, "%.02f", 1.0F);
 
-        config.requires_remake_kernel |= ImGui::SliderFloat("Sample Radius", &config.sphere_radius, 0.0F, 5.0F, "%.02f", 1.0F);
+        config.requires_remake_kernel |= ImGui::SliderFloat("Sample Radius", &config.sphere_radius, 0.01F, 5.0F, "%.02f", 1.0F);
         config.requires_remake_kernel |= ImGui::SliderInt("Sample Count", &config.sample_count, 1, 256);
         
         config.requires_remake_kernel |= ImGui::SliderInt("Blur Kernel Size", &config.gaussian_size, 1, 8);
         config.requires_remake_kernel |= ImGui::SliderFloat("Blur Kernel Sigma", &config.gaussian_sigma, 0.0, 5.0, "%.02f", 1.0F);
         config.requires_remake_kernel |= ImGui::SliderFloat("Blur Kernel Offset Factor", &config.gaussian_offset_factor, 0.0, 5.0, "%.02f", 1.0F);
 
-        ImGui::SliderFloat("Direct Light Strength", &config.direct_strength, 0.0F, 4.0F, "%.02f", 1.0F);
-        ImGui::SliderFloat("Inirect Light Strength", &config.indirect_strength, 0.0F, 4.0F, "%.02f", 1.0F);
+        ImGui::SliderFloat("direct Light Strength", &config.direct_strength, 0.0F, 4.0F, "%.02f", 1.0F);
+        ImGui::SliderFloat("Inirect Light Strength", &config.indirect_strength, 0.0F, 10.0F, "%.02f", 1.0F);
     }
 
     void after_tick(){
@@ -295,32 +295,32 @@ public:
 
 class Shaders{
 public:
-    Shader * shaderGeometryPass;
-    Shader * shaderdirectlight;
-    Shader * shaderindirectlight;
-    Shader * shaderssdoblur;
-    Shader * shaderLightingPass;   
+    Shader * geometry;
+    Shader * direct;
+    Shader * indirect;
+    Shader * blur;
+    Shader * lighting;   
 }shaders;
 
 void set_uniform_shader_params(){
-    shaders.shaderdirectlight->use();
-    shaders.shaderdirectlight->setInt("gPosition", 0);
-    shaders.shaderdirectlight->setInt("gNormal", 1);
-    shaders.shaderdirectlight->setInt("gAlbedo", 2);
-    shaders.shaderdirectlight->setInt("texNoise", 3);
-    shaders.shaderindirectlight->use();
-    shaders.shaderindirectlight->setInt("gPosition", 0);
-    shaders.shaderindirectlight->setInt("gNormal", 1);
-    shaders.shaderindirectlight->setInt("gAlbedo", 2);
-    shaders.shaderindirectlight->setInt("texNoise", 3);
-    shaders.shaderindirectlight->setInt("directLight", 4);
-    shaders.shaderssdoblur->use();
-    shaders.shaderssdoblur->setInt("ssdoInput", 0);
-    shaders.shaderLightingPass->use();
-    shaders.shaderLightingPass->setInt("gPosition", 0);
-    shaders.shaderLightingPass->setInt("gNormal", 1);
-    shaders.shaderLightingPass->setInt("gAlbedo", 2);
-    shaders.shaderLightingPass->setInt("ssdo", 3);
+    shaders.direct->use();
+    shaders.direct->setInt("gPosition", 0);
+    shaders.direct->setInt("gNormal", 1);
+    shaders.direct->setInt("gAlbedo", 2);
+    shaders.direct->setInt("texNoise", 3);
+    shaders.indirect->use();
+    shaders.indirect->setInt("gPosition", 0);
+    shaders.indirect->setInt("gNormal", 1);
+    shaders.indirect->setInt("gAlbedo", 2);
+    shaders.indirect->setInt("texNoise", 3);
+    shaders.indirect->setInt("directLight", 4);
+    shaders.blur->use();
+    shaders.blur->setInt("ssdoInput", 0);
+    shaders.lighting->use();
+    shaders.lighting->setInt("gPosition", 0);
+    shaders.lighting->setInt("gNormal", 1);
+    shaders.lighting->setInt("gAlbedo", 2);
+    shaders.lighting->setInt("ssdo", 3);
 
     
 }
@@ -371,11 +371,11 @@ int main(){
     glEnable(GL_DEPTH_TEST);
 
     const std::string shader_dir = RES_DIR + "/shaders_ssdo";
-    shaders.shaderGeometryPass = new Shader((shader_dir + "/geometry.vs").c_str(), (shader_dir + "/geometry.fs").c_str());
-    shaders.shaderdirectlight = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/direct_light.fs").c_str());
-    shaders.shaderindirectlight = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/indirect_light.fs").c_str());
-    shaders.shaderssdoblur = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/blur.fs").c_str());
-    shaders.shaderLightingPass = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/lighting.fs").c_str()); 
+    shaders.geometry = new Shader((shader_dir + "/geometry.vs").c_str(), (shader_dir + "/geometry.fs").c_str());
+    shaders.direct = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/direct_light.fs").c_str());
+    shaders.indirect = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/indirect_light.fs").c_str());
+    shaders.blur = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/blur.fs").c_str());
+    shaders.lighting = new Shader((shader_dir + "/ssdo.vs").c_str(), (shader_dir + "/lighting.fs").c_str()); 
 
     // std::cout << model_loaded.textures_loaded.size() << std::endl;
 
@@ -404,7 +404,7 @@ int main(){
             last_width = width;
             last_height = height;
                 
-            remake(width, height);
+            remake_buffers(width, height);
         }
 
         if(config.requires_remake_kernel){
@@ -425,29 +425,29 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 50.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        shaders.shaderGeometryPass->use();
-        shaders.shaderGeometryPass->setMat4("projection", projection);
-        shaders.shaderGeometryPass->setMat4("view", view);
-        shaders.shaderGeometryPass->setInt("invertedNormals", 0);
+        shaders.geometry->use();
+        shaders.geometry->setMat4("projection", projection);
+        shaders.geometry->setMat4("view", view);
+        shaders.geometry->setInt("invertedNormals", 0);
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0, 1.0, 0.0));
         model = glm::scale(model, glm::vec3(config.models[config.selected_model].scale));
-        shaders.shaderGeometryPass->setMat4("model", model);
-        config.models[config.selected_model].model.Draw(*shaders.shaderGeometryPass);
+        shaders.geometry->setMat4("model", model);
+        config.models[config.selected_model].model.Draw(*shaders.geometry);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         //directlight
-        glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdoFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_fbo);
         glClear(GL_COLOR_BUFFER_BIT);
-        shaders.shaderdirectlight->use();
+        shaders.direct->use();
         for (unsigned int i = 0; i < config.sample_count; ++i)
-            shaders.shaderdirectlight->setVec3("samples[" + std::to_string(i) + "]", ssdoKernel[i]);
-        shaders.shaderdirectlight->setMat4("projection", projection);
-        shaders.shaderdirectlight->setInt("samplecount", config.sample_count);
+            shaders.direct->setVec3("samples[" + std::to_string(i) + "]", ssdoKernel[i]);
+        shaders.direct->setMat4("projection", projection);
+        shaders.direct->setInt("samplecount", config.sample_count);
         // glm::vec3 lightPosView = glm::vec3(view * glm::vec4(lightPos, 1.0));
-        shaders.shaderdirectlight->setVec3("lightcolor", lightColor);
-        shaders.shaderdirectlight->setFloat("radius", config.sphere_radius);
+        shaders.direct->setVec3("lightcolor", lightColor);
+        shaders.direct->setFloat("radius", config.sphere_radius);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, buf.gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -455,21 +455,21 @@ int main(){
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, buf.gAlbedo);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, buf.noiseTexture);
+        glBindTexture(GL_TEXTURE_2D, buf.noise);
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         //indireclight
-        glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdoFBO2);
+        glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_fbo2);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shaders.shaderindirectlight->use();
+        shaders.indirect->use();
         for (unsigned int i = 0; i < config.sample_count; ++i)
-            shaders.shaderindirectlight->setVec3("samples[" + std::to_string(i) + "]", ssdoKernel[i]);
-        shaders.shaderindirectlight->setInt("samplecount", config.sample_count);
-        shaders.shaderindirectlight->setMat4("projection", projection);
-        shaders.shaderindirectlight->setFloat("direct_strength", config.direct_strength);
-        shaders.shaderindirectlight->setFloat("indirect_strength", config.indirect_strength);
-        shaders.shaderindirectlight->setFloat("radius", config.sphere_radius);
+            shaders.indirect->setVec3("samples[" + std::to_string(i) + "]", ssdoKernel[i]);
+        shaders.indirect->setInt("samplecount", config.sample_count);
+        shaders.indirect->setMat4("projection", projection);
+        shaders.indirect->setFloat("direct_strength", config.direct_strength);
+        shaders.indirect->setFloat("indirect_strength", config.indirect_strength);
+        shaders.indirect->setFloat("radius", config.sphere_radius);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, buf.gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -477,39 +477,39 @@ int main(){
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, buf.gAlbedo);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, buf.noiseTexture);
+        glBindTexture(GL_TEXTURE_2D, buf.noise);
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, buf.ssdoColorBuffer);
+        glBindTexture(GL_TEXTURE_2D, buf.ssdo_color);
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         //blur stage
-        glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdoBlurFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_blur_fbo);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shaders.shaderssdoblur->use();
+        shaders.blur->use();
         int gs = config.gaussian_size;
         for (unsigned int i = 0;i < gs * 2 + 1;i++) {
             for (unsigned int j = 0;j < gs * 2 + 1;j++) {
-                shaders.shaderssdoblur->setFloat("gauss[" + std::to_string(i * (gs * 2 + 1) + j) + "]", gaussian[i][j]);
+                shaders.blur->setFloat("gauss[" + std::to_string(i * (gs * 2 + 1) + j) + "]", gaussian[i][j]);
             }
         }
-        shaders.shaderssdoblur->setInt("gs", gs);
-        shaders.shaderssdoblur->setFloat("offset_factor", config.gaussian_offset_factor);
+        shaders.blur->setInt("gs", gs);
+        shaders.blur->setFloat("offset_factor", config.gaussian_offset_factor);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, buf.ssdoColorBuffer2);
+        glBindTexture(GL_TEXTURE_2D, buf.ssdo_color2);
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shaders.shaderLightingPass->use();
+        shaders.lighting->use();
         glm::vec3 lightPosView = glm::vec3(view * glm::vec4(lightPos, 1.0));
-        shaders.shaderLightingPass->setVec3("light.Position", lightPosView);
-        shaders.shaderLightingPass->setVec3("light.Color", lightColor);
+        shaders.lighting->setVec3("light.Position", lightPosView);
+        shaders.lighting->setVec3("light.Color", lightColor);
         const float linear = 0.09f;
         const float quadratic = 0.032f;
-        shaders.shaderLightingPass->setFloat("light.Linear", linear);
-        shaders.shaderLightingPass->setFloat("light.Quadratic", quadratic);
+        shaders.lighting->setFloat("light.Linear", linear);
+        shaders.lighting->setFloat("light.Quadratic", quadratic);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, buf.gPosition);
         glActiveTexture(GL_TEXTURE1);
@@ -517,7 +517,7 @@ int main(){
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, buf.gAlbedo);
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, buf.ssdoColorBufferBlur);
+        glBindTexture(GL_TEXTURE_2D, buf.ssdo_blur);
         renderQuad();
 
         imgui.draw_ui();
