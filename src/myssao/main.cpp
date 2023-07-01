@@ -31,7 +31,6 @@ const int MAX_GK_SIZE = 8; // array size is (size * 2 + 1)
 float PI = 3.1415926;
 float sigma = 1.0f;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -346,7 +345,7 @@ int main(){
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -437,15 +436,16 @@ int main(){
         config.models[config.selected_model].model.Draw(*shaders.geometry);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        //directlight
+        // Direct
         glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_fbo);
         glClear(GL_COLOR_BUFFER_BIT);
         shaders.direct->use();
-        for (unsigned int i = 0; i < config.sample_count; ++i)
+        for (unsigned int i = 0; i < config.sample_count; ++i){
             shaders.direct->setVec3("samples[" + std::to_string(i) + "]", ssdoKernel[i]);
+        }
         shaders.direct->setMat4("projection", projection);
         shaders.direct->setInt("samplecount", config.sample_count);
-        // glm::vec3 lightPosView = glm::vec3(view * glm::vec4(lightPos, 1.0));
+        
         shaders.direct->setVec3("lightcolor", lightColor);
         shaders.direct->setFloat("radius", config.sphere_radius);
         glActiveTexture(GL_TEXTURE0);
@@ -459,12 +459,13 @@ int main(){
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        //indireclight
+        // Indirect
         glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_fbo2);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shaders.indirect->use();
-        for (unsigned int i = 0; i < config.sample_count; ++i)
+        for (unsigned int i = 0; i < config.sample_count; ++i){
             shaders.indirect->setVec3("samples[" + std::to_string(i) + "]", ssdoKernel[i]);
+        }
         shaders.indirect->setInt("samplecount", config.sample_count);
         shaders.indirect->setMat4("projection", projection);
         shaders.indirect->setFloat("direct_strength", config.direct_strength);
@@ -482,7 +483,8 @@ int main(){
         glBindTexture(GL_TEXTURE_2D, buf.ssdo_color);
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        //blur stage
+
+        // Blur
         glBindFramebuffer(GL_FRAMEBUFFER, buf.ssdo_blur_fbo);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shaders.blur->use();
@@ -499,8 +501,7 @@ int main(){
         renderQuad();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-
+        // Lighting
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shaders.lighting->use();
         glm::vec3 lightPosView = glm::vec3(view * glm::vec4(lightPos, 1.0));
@@ -545,7 +546,6 @@ void renderQuad() {
              1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
              1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
         };
-
         glGenVertexArrays(1, &quadVAO);
         glGenBuffers(1, &quadVBO);
         glBindVertexArray(quadVAO);
@@ -562,28 +562,28 @@ void renderQuad() {
 }
 
 
-void processInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+void processInput(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
         camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
         camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
         camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
         camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS){
         camera.ProcessKeyboard(DOWN, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
         camera.ProcessKeyboard(UP, deltaTime);
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    //glViewport(0, 0, width, height);
+    }
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
@@ -601,29 +601,22 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
     lastX = xpos;
     lastY = ypos;
 
-    if (rightMouseButtonPressed)
-    {
+    if (rightMouseButtonPressed) {
         camera.ProcessMouseMovement(xoffset, yoffset);
     }
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if (button == GLFW_MOUSE_BUTTON_RIGHT)
-    {
-        if (action == GLFW_PRESS)
-        {
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (action == GLFW_PRESS) {
             rightMouseButtonPressed = true;
-        }
-        else if (action == GLFW_RELEASE)
-        {
+        } else if (action == GLFW_RELEASE) {
             rightMouseButtonPressed = false;
         }
     }
 }
 
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
